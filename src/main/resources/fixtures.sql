@@ -1,0 +1,1 @@
+INSERT INTO items VALUES ('Do something', FALSE, '12-12-2011');
