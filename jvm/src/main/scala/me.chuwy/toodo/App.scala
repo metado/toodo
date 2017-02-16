@@ -20,8 +20,30 @@ object App extends ServerApp {
 
   override def server(args: List[String]): Task[Server] = {
 
-    val todoCrud = HttpService {
+    /**
+      * Mount point for static assets
+      */
+    val index = HttpService {
+      case GET -> Root =>
+        lazy val byteStream = Thread.currentThread.getContextClassLoader.getResourceAsStream("index.html")
+        val index = io.readInputStream(Task.delay(byteStream), 256 * 2)
+        val mimeType = Headers(headers.`Content-Type`(MediaType.`text/html`))
+        val response = Response(Status.Ok, body = index, headers = mimeType)
+        Task.delay(response)
 
+      case GET -> Root / "app.js" =>
+        val index = io.readInputStream(Task.delay {
+          Thread.currentThread.getContextClassLoader.getResourceAsStream("content/target/cross-fastopt.js")
+        }, 2048 * 1024) // Don't know why it truncates my files
+        val mimeType = Headers(headers.`Content-Type`(MediaType.`application/javascript`))
+        val response = Response(Status.Ok, body = index, headers = mimeType)
+        Task.delay(response)
+    }
+
+    /**
+      * Mount point for toodo REST API
+      */
+    val todoCrud = HttpService {
       case GET -> Root =>
         for {
           allItems <- DB.allItems.map(_.asJson)
@@ -37,11 +59,11 @@ object App extends ServerApp {
 
       case GET -> Root / "file" / name =>
         Task.delay { Response(Status.Ok, body = Experimenting.readFile(name)) }
-
     }
 
     BlazeBuilder
       .bindHttp(8080, "localhost")
+      .mountService(index, "/")
       .mountService(todoCrud, "/api")
       .start
   }
