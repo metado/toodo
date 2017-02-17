@@ -12,12 +12,12 @@ lazy val root = (project in file("."))
 lazy val cross = (crossProject in file("."))
   .settings(
     libraryDependencies ++= Seq(
-      "org.typelevel" %% "cats"                 % Versions.cats,
-      "io.circe"      %% "circe-core"           % Versions.circe,
-      "io.circe"      %% "circe-generic"        % Versions.circe,
-      "io.circe"      %% "circe-parser"         % Versions.circe
+      "com.chuusai"   %%% "shapeless"           % Versions.shapeless,
+      "org.typelevel" %%% "cats"                % Versions.cats,
+      "io.circe"      %%% "circe-core"          % Versions.circe,
+      "io.circe"      %%% "circe-generic"       % Versions.circe,
+      "io.circe"      %%% "circe-parser"        % Versions.circe
     )
-
   )
   .jvmSettings(
     mainClass in run := Some("me.chuwy.toodo.App"),
@@ -27,7 +27,6 @@ lazy val cross = (crossProject in file("."))
       "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
 
     libraryDependencies ++= Seq(
-      "com.chuusai"   %% "shapeless"            % Versions.shapeless,
       "co.fs2"        %% "fs2-core"             % Versions.fs2,
       "co.fs2"        %% "fs2-io"               % Versions.fs2,
       "co.fs2"        %% "fs2-cats"             % Versions.fs2Cats,
