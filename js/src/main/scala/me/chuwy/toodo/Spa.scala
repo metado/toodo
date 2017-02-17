@@ -2,12 +2,18 @@ package me.chuwy.toodo
 
 import scala.scalajs.js
 import scala.scalajs.concurrent.JSExecutionContext
+
 import org.scalajs.dom
 import org.scalajs.dom.ext.Ajax
-import Data.Item
 
 import scala.concurrent.ExecutionContext
 import scala.util.Success
+
+import io.circe._, generic.auto._, parser._, io.circe.syntax._
+
+
+import Data.Item
+
 
 object Spa extends js.JSApp {
 
@@ -18,7 +24,8 @@ object Spa extends js.JSApp {
     Ajax.get("http://127.0.0.1:8080/api/").onComplete {
       case Success(xhr) =>
         println(xhr)
-        target.textContent = xhr.responseText
+        val result = parse(xhr.responseText).flatMap { json => json.as[List[Item]] }
+        target.textContent = result.toString
       case _ => println("Failure")
     }
   }
