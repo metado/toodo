@@ -7,6 +7,8 @@ object Versions {
   val doobie = "0.4.1"
   val circe = "0.7.0"
 
+  val slf4j = "1.7.23"
+
   val dom = "0.9.1"
 }
 

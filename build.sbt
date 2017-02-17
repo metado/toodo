@@ -35,7 +35,8 @@ lazy val cross = (crossProject in file("."))
       "org.http4s"    %% "http4s-blaze-server"  % Versions.http4s,
       "org.http4s"    %% "http4s-circe"         % Versions.http4s,
       "org.tpolecat"  %% "doobie-core-cats"     % Versions.doobie,
-      "org.tpolecat"  %% "doobie-postgres-cats" % Versions.doobie
+      "org.tpolecat"  %% "doobie-postgres-cats" % Versions.doobie,
+      "org.slf4j"     % "slf4j-simple"          % Versions.slf4j
     )
   )
   .jsSettings(

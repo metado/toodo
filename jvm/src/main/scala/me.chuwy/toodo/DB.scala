@@ -9,7 +9,7 @@ import Data.Item
 object DB {
 
   val xa = DriverManagerTransactor[Task](
-    "org.postgresql.Driver", "jdbc:postgresql:toodo", "chuwy", "none"
+    "org.postgresql.Driver", "jdbc:postgresql:toodo", "chuwy", "Supersecret1"
   )
 
   def allItems: Task[List[Item]] = {
