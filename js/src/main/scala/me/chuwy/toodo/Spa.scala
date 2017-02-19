@@ -2,18 +2,22 @@ package me.chuwy.toodo
 
 import scala.scalajs.js
 import scala.scalajs.concurrent.JSExecutionContext
-
 import org.scalajs.dom
-import org.scalajs.dom.ext.Ajax
+import org.scalajs.dom.ext.{Ajax, KeyCode}
 
 import scala.concurrent.ExecutionContext
 import scala.util.Success
-
-import io.circe._, generic.auto._, parser._, io.circe.syntax._
-
-
+import io.circe._
+import generic.auto._
+import parser._
+import io.circe.syntax._
+import mhtml._
 import Data.Item
+import org.scalajs.dom.raw.HTMLInputElement
 
+object Model {
+  val items: Var[List[Item]] = Var(Nil)
+}
 
 object Spa extends js.JSApp {
 
@@ -28,6 +32,28 @@ object Spa extends js.JSApp {
         target.textContent = result.toString
       case _ => println("Failure")
     }
+  }
+
+  def newTodo(item: String): Unit = { println(item) }
+
+  val header: xml.Node = {
+    val onInputKeydown: (dom.KeyboardEvent) => Unit = { event: dom.KeyboardEvent =>
+      (event.currentTarget, event.keyCode) match {
+        case (input: HTMLInputElement, KeyCode.Enter) =>
+          newTodo(input.value)
+          input.value = ""
+        case _ => ()
+
+      }
+    }
+    <input class="new-todo" onkeydown={onInputKeydown}></input>
+
+  }
+
+  def app: xml.Node = {
+    <div>
+      {header}
+    </div>
   }
 
   def main(): Unit = {

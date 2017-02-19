@@ -10,5 +10,6 @@ object Versions {
   val slf4j = "1.7.23"
 
   val dom = "0.9.1"
+  val monadicHtml = "latest.integration"
 }
 
