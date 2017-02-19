@@ -11,5 +11,6 @@ object Versions {
 
   val dom = "0.9.1"
   val monadicHtml = "latest.integration"
+  val jsTime = "0.2.0"
 }
 

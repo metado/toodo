@@ -45,7 +45,8 @@ lazy val cross = (crossProject in file("."))
     libraryDependencies ++= Seq(
       "org.scala-js"  %%% "scalajs-dom"         % Versions.dom,
       "in.nvilla"     %%% "monadic-html"        % Versions.monadicHtml,
-      "in.nvilla"     %%% "monadic-rx-cats"     % Versions.monadicHtml
+      "in.nvilla"     %%% "monadic-rx-cats"     % Versions.monadicHtml,
+      "org.scala-js"  %%% "scalajs-java-time"   % Versions.jsTime
     )
   )
 

@@ -13,12 +13,12 @@ object DB {
   )
 
   def allItems: Task[List[Item]] = {
-    val sql: Query0[Item] = sql"select title, create_date from items".query[Item]
+    val sql: Query0[Item] = sql"SELECT title, done, create_date FROM items".query[Item]
     sql.list.transact(xa)
   }
 
   def insertItem(item: Item): Task[Int] = {
-    val sql: Update0 = sql"INSERT INTO items (title, done, create_date) VALUES (${item.title}, FALSE, ${item.createDate})".update
+    val sql: Update0 = sql"INSERT INTO items (title, done, create_date) VALUES (${item.title}, ${item.done}, ${item.createDate})".update
     sql.run.transact(xa)
   }
 }

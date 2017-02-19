@@ -23,7 +23,7 @@ object Model {
   val allItems: Var[List[Item]] = Var(Nil)
 
   def newItem(title: String): Unit = {
-    val item = Item(title, "just now")
+    val item = Item(title, done = false, "just now")
     createItem(item).onComplete {
       case Success(_) => allItems.update(todos => item +: todos)
       case Failure(fail) => dom.console.log(fail.asInstanceOf[js.Any])
@@ -41,6 +41,8 @@ object Spa extends js.JSApp {
 
   implicit val context: ExecutionContext = JSExecutionContext.queue
 
+  private def conditionalAttribute(cond: Boolean) = if (cond) "true" else null
+
   def getItems: Future[Either[Error, List[Item]]] =
     Ajax.get("http://127.0.0.1:8080/api/").map { xhr =>
       parse(xhr.responseText).flatMap { json => json.as[List[Item]] }
@@ -57,6 +59,7 @@ object Spa extends js.JSApp {
       <span> {item.title} </span>
       <span> created at </span>
       <span> {item.createDate} </span>
+      <span> <input type="checkbox" checked={conditionalAttribute(item.done)}></input> </span>
     </div>
   }
 
@@ -70,7 +73,7 @@ object Spa extends js.JSApp {
               Model.newItem(title)
               input.value = ""
           }
-        case _ =>
+        case _ => ()
       }
     }
     <header class="header">
