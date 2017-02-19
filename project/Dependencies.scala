@@ -6,6 +6,7 @@ object Versions {
   val shapeless = "2.3.2"
   val doobie = "0.4.1"
   val circe = "0.7.0"
+  val scalaTime = "2.0.0-M7"
 
   val slf4j = "1.7.23"
 

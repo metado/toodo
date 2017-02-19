@@ -10,7 +10,11 @@ import org.scalajs.dom
 import org.scalajs.dom.ext.{Ajax, KeyCode}
 import org.scalajs.dom.raw.HTMLInputElement
 
+import org.threeten.bp.LocalDateTime
+
 import io.circe._, generic.auto._, parser._, io.circe.syntax._
+
+import io.circe.time._
 
 import mhtml._
 
@@ -23,7 +27,8 @@ object Model {
   val allItems: Var[List[Item]] = Var(Nil)
 
   def newItem(title: String): Unit = {
-    val item = Item(title, done = false, "just now")
+    val time = LocalDateTime.now
+    val item = Item(title, done = false, time)
     createItem(item).onComplete {
       case Success(_) => allItems.update(todos => item +: todos)
       case Failure(fail) => dom.console.log(fail.asInstanceOf[js.Any])
@@ -58,7 +63,7 @@ object Spa extends js.JSApp {
     <div>
       <span> {item.title} </span>
       <span> created at </span>
-      <span> {item.createDate} </span>
+      <span> {item.createDate.toString} </span>
       <span> <input type="checkbox" checked={conditionalAttribute(item.done)}></input> </span>
     </div>
   }

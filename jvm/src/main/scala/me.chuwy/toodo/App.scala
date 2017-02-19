@@ -6,6 +6,8 @@ import cats._, data._, instances.all._, syntax.all._
 
 import io.circe._, generic.auto._, parser._, io.circe.syntax._
 
+import io.circe.time._
+
 import fs2._
 
 import org.http4s.{ ParsingFailure => _, _}, dsl._
