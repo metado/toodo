@@ -18,7 +18,7 @@ object DB {
   }
 
   def insertItem(item: Item): Task[Int] = {
-    val sql: Update0 = sql"INSERT INTO items (title, done, create_date) VALUES (${item.title}, false, ${item.createDate})".update
+    val sql: Update0 = sql"INSERT INTO items (title, done, create_date) VALUES (${item.title}, FALSE, ${item.createDate})".update
     sql.run.transact(xa)
   }
 }
