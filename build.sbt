@@ -12,12 +12,11 @@ lazy val root = (project in file("."))
 lazy val cross = (crossProject in file("."))
   .settings(
     libraryDependencies ++= Seq(
-      "com.chuusai"       %%% "shapeless"           % Versions.shapeless,
-      "org.typelevel"     %%% "cats"                % Versions.cats,
-      "io.circe"          %%% "circe-core"          % Versions.circe,
-      "io.circe"          %%% "circe-generic"       % Versions.circe,
-      "io.circe"          %%% "circe-parser"        % Versions.circe,
-      "io.github.cquiroz" %%% "scala-java-time"     % Versions.scalaTime
+      "com.chuusai"   %%% "shapeless"           % Versions.shapeless,
+      "org.typelevel" %%% "cats"                % Versions.cats,
+      "io.circe"      %%% "circe-core"          % Versions.circe,
+      "io.circe"      %%% "circe-generic"       % Versions.circe,
+      "io.circe"      %%% "circe-parser"        % Versions.circe
     )
   )
   .jvmSettings(
@@ -45,10 +44,10 @@ lazy val cross = (crossProject in file("."))
 
 
     libraryDependencies ++= Seq(
-      "org.scala-js"  %%% "scalajs-dom"         % Versions.dom,
-      "in.nvilla"     %%% "monadic-html"        % Versions.monadicHtml,
-      "in.nvilla"     %%% "monadic-rx-cats"     % Versions.monadicHtml,
-      "org.scala-js"  %%% "scalajs-java-time"   % Versions.jsTime
+      "org.scala-js"      %%% "scalajs-dom"         % Versions.dom,
+      "in.nvilla"         %%% "monadic-html"        % Versions.monadicHtml,
+      "in.nvilla"         %%% "monadic-rx-cats"     % Versions.monadicHtml,
+      "io.github.cquiroz" %%% "scala-java-time"     % Versions.scalaTime
     )
   )
 

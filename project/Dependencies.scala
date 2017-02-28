@@ -6,12 +6,11 @@ object Versions {
   val shapeless = "2.3.2"
   val doobie = "0.4.1"
   val circe = "0.7.0"
-  val scalaTime = "2.0.0-M7"
+  val scalaTime = "2.0.0-M8"
 
   val slf4j = "1.7.23"
 
   val dom = "0.9.1"
   val monadicHtml = "latest.integration"
-  val jsTime = "0.2.0"
 }
 

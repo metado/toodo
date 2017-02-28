@@ -2,9 +2,9 @@ package io.circe.time
 
 import io.circe.{ Decoder, DecodingFailure, Encoder, Json }
 
-import org.threeten.bp.{ Instant, LocalDate, LocalDateTime, LocalTime, OffsetDateTime, ZonedDateTime }
-import org.threeten.bp.format.{ DateTimeFormatter, DateTimeParseException }
-import org.threeten.bp.format.DateTimeFormatter.{
+import java.time.{ Instant, LocalDate, LocalDateTime, LocalTime, OffsetDateTime, ZonedDateTime }
+import java.time.format.{ DateTimeFormatter, DateTimeParseException }
+import java.time.format.DateTimeFormatter.{
 ISO_LOCAL_DATE,
 ISO_LOCAL_DATE_TIME,
 ISO_LOCAL_TIME,
@@ -35,8 +35,10 @@ trait TimeInstances {
       }
     }
 
-  final def encodeLocalDateTime(formatter: DateTimeFormatter): Encoder[LocalDateTime] =
-    Encoder.instance(time => Json.fromString(time.format(formatter)))
+  final def encodeLocalDateTime(formatter: DateTimeFormatter): Encoder[LocalDateTime] = {
+    Encoder.instance(time => Json.fromString(time.toString()))
+//    Encoder.instance(time => Json.fromString(time.format(formatter)))   // TODO: bring it back
+  }
 
   implicit final val decodeLocalDateTimeDefault: Decoder[LocalDateTime] = decodeLocalDateTime(ISO_LOCAL_DATE_TIME)
   implicit final val encodeLocalDateTimeDefault: Encoder[LocalDateTime] = encodeLocalDateTime(ISO_LOCAL_DATE_TIME)
@@ -76,7 +78,11 @@ trait TimeInstances {
   final def decodeLocalDate(formatter: DateTimeFormatter): Decoder[LocalDate] =
     Decoder.instance { c =>
       c.as[String] match {
-        case Right(s) => try Right(LocalDate.parse(s, formatter)) catch {
+        case Right(s) => try {
+          println(s)
+          println(formatter)
+          Right(LocalDate.parse(s, formatter))
+        } catch {
           case _: DateTimeParseException => Left(DecodingFailure("LocalDate", c.history))
         }
         case l @ Left(_) => l.asInstanceOf[Decoder.Result[LocalDate]]
