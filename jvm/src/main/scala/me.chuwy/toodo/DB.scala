@@ -25,8 +25,8 @@ object DB {
   implicit val localDateTimeMeta =
     Meta[Timestamp].xmap(convertTimestamp, convertLocalDateTime)
 
-  def allItems: Task[List[IdItem]] = {
-    val sql: Query0[IdItem] = sql"SELECT id, title, done, create_date FROM items".query[IdItem]
+  def allItems: Task[List[Item.Stored]] = {
+    val sql: Query0[Item.Stored] = sql"SELECT id, title, done, create_date FROM items".query[Item.Stored]
     sql.list.transact(xa)
   }
 

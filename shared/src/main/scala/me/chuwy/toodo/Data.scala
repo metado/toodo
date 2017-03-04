@@ -8,9 +8,10 @@ object Data {
 
   case class Item(title: String, done: Boolean, createDate: LocalDateTime)
 
-  type IdItem = WithId[Item]
-
   object Item {
+
+    type Stored = WithId[Item]
+
     def apply(title: String): Item =
       Item(title, false, LocalDateTime.now)
   }

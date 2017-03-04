@@ -16,13 +16,13 @@ import cats.syntax.either._
 
 import mhtml._
 
-import Data.{ Item, IdItem, WithId }
+import Data.{ Item, WithId }
 
 object Model {
 
   implicit val context: ExecutionContext = JSExecutionContext.queue
 
-  val allItems: Var[List[Either[String, IdItem]]] = Var(Nil)
+  val allItems: Var[List[Either[String, Item.Stored]]] = Var(Nil)
 
   def newItem(title: String): Unit = {
     val item = Item(title)
@@ -45,21 +45,21 @@ object Spa extends js.JSApp {
 
   private def conditionalAttribute(cond: Boolean) = if (cond) "true" else null
 
-  def getItems: Future[Either[Error, List[IdItem]]] =
+  def getItems: Future[Either[Error, List[Item.Stored]]] =
     Ajax.get("http://127.0.0.1:8080/api/").map { xhr =>
-      parse(xhr.responseText).flatMap { json => json.as[List[IdItem]] }
+      parse(xhr.responseText).flatMap { json => json.as[List[Item.Stored]] }
     }
 
   getItems.onComplete {
     case Success(Right(list)) =>
       Model.allItems := list.map(_.asRight[String])
     case Success(Left(err)) =>
-      Model.allItems := List(err.toString.asLeft[IdItem])
+      Model.allItems := List(err.toString.asLeft[Item.Stored])
     case Failure(err) =>
-      Model.allItems := List(err.toString.asLeft[IdItem])
+      Model.allItems := List(err.toString.asLeft[Item.Stored])
   }
 
-  def updateItem(id: Long, f: IdItem => IdItem): Unit = {
+  def updateItem(id: Long, f: Item.Stored => Item.Stored): Unit = {
     val newItems = Model.allItems.value.map {
       case Right(item) if item.id == id => Right(f(item))
       case other => other
@@ -67,7 +67,7 @@ object Spa extends js.JSApp {
     Model.allItems := newItems
   }
 
-  def itemNode(item: Either[String, IdItem]): xml.Node = {
+  def itemNode(item: Either[String, Item.Stored]): xml.Node = {
     val onChange: (dom.MouseEvent) => Unit = { event: dom.MouseEvent =>
       item match {
         case Right(i) =>

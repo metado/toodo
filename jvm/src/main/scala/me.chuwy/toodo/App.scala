@@ -3,16 +3,12 @@ package me.chuwy.toodo
 import java.nio.file._
 import java.sql.Timestamp
 
-import cats._
-import data._
-import instances.all._
-import syntax.all._
-import io.circe._
-import generic.auto._
-import parser._
-import io.circe.syntax._
-import io.circe.time._
+import cats._, data._, instances.all._, syntax.all._
+
+import io.circe._, generic.auto._, parser._, io.circe.syntax._, io.circe.time._
+
 import fs2._
+
 import org.http4s.{ParsingFailure => _, _}
 import dsl._
 import org.http4s.server.{Server, ServerApp}
@@ -75,7 +71,7 @@ object App extends ServerApp {
         for {
           item <- request.as(jsonOf[Item])
           inserted <- DB.insertItem(item)
-          response <- Ok(inserted.asJson)
+          response <- Created(inserted.asJson)
         } yield response
 
       case GET -> Root / "file" / name =>
