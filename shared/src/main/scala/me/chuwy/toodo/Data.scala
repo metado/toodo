@@ -12,6 +12,9 @@ object Data {
 
     type Stored = WithId[Item]
 
+    def getUri(item: Stored): String =
+      s"/item/${item.id}"
+
     def apply(title: String): Item =
       Item(title, false, LocalDateTime.now)
   }

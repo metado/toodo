@@ -49,10 +49,10 @@ object App extends ServerApp {
 
 
       case GET -> Root / "cross-fastopt.js.map" =>
+        val mimeType = Headers(headers.`Content-Type`(MediaType.`application/javascript`))
         val index = io.readInputStream(Task.delay {
           Thread.currentThread.getContextClassLoader.getResourceAsStream("content/target/cross-fastopt.js.map")
         }, 2048 * 1024) // Don't know why it truncates my files
-      val mimeType = Headers(headers.`Content-Type`(MediaType.`application/javascript`))
         val response = Response(Status.Ok, body = index, headers = mimeType)
         Task.delay(response)
     }
@@ -67,11 +67,18 @@ object App extends ServerApp {
           response <- Ok(allItems)
         } yield response
 
+      case GET -> Root / "item" / IntVar(itemId) =>
+        for {
+          item <- DB.getItem(itemId)
+          response <- Ok(item.asJson)
+        } yield response
+
       case request @ POST -> Root / "item" =>
         for {
           item <- request.as(jsonOf[Item])
           inserted <- DB.insertItem(item)
-          response <- Created(inserted.asJson)
+          uri = Uri.unsafeFromString(s"http://127.0.0.1/api${Data.Item.getUri(inserted)}")
+          response <- Created(inserted.asJson).putHeaders(headers.Location(uri))
         } yield response
 
       case GET -> Root / "file" / name =>

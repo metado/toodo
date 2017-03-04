@@ -6,7 +6,13 @@ import java.time.LocalDateTime
 import java.time.{ ZoneId, ZoneOffset }
 
 import fs2._
+import fs2.interop.cats._
+
 import doobie.imports._
+import doobie.free.connection._
+
+import cats.syntax.all._
+import cats.instances.all._
 
 import Data._
 
@@ -30,9 +36,15 @@ object DB {
     sql.list.transact(xa)
   }
 
-  def insertItem(item: Item): Task[Int] = {
+  def getItem(id: Int): Task[Item.Stored] = {
+    val sql: Query0[Item.Stored] = sql"SELECT id, title, done, create_date FROM items WHERE id = $id".query[Item.Stored]
+    sql.unique.transact(xa)
+  }
+
+  def insertItem(item: Item): Task[Item.Stored] = {
     val sql: Update0 = sql"INSERT INTO items (title, done, create_date) VALUES (${item.title}, ${item.done}, ${item.createDate})".update
-    sql.run.transact(xa)
+    val insterted = sql.withUniqueGeneratedKeys[Item.Stored]("id", "title", "done", "create_date")
+    insterted.transact(xa)
   }
 
   val fixtures = List(
