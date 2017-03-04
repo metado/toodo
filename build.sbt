@@ -57,11 +57,15 @@ lazy val toodoJVM = cross.jvm
   // Remove scala.js target from file watch to prevent compilation loop
   .settings(watchSources := watchSources.value.filterNot(_.getPath.contains("target")))
   // Add web-client sources to file watch
-  .settings(watchSources <++= (watchSources in toodoJS))
+  .settings(watchSources ++= (watchSources in toodoJS).value)
   // Make compile depend on Scala.js fast compilation
-  .settings(compile <<= (compile in Compile) dependsOn (fastOptJS in Compile in toodoJS))
+  .settings(compile := {
+    (compile in Compile) dependsOn (fastOptJS in Compile in toodoJS)
+  }.value)
   // Make re-start depend on Scala.js fast compilation
-  .settings(reStart <<= reStart dependsOn (fastOptJS in Compile in toodoJS))
+  .settings(reStart := {
+    reStart dependsOn (fastOptJS in Compile in toodoJS)
+  }.evaluated)
 
 
 lazy val toodoJS = cross.js

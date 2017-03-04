@@ -61,7 +61,7 @@ object App extends ServerApp {
       * Mount point for toodo REST API
       */
     val todoCrud = HttpService {
-      case GET -> Root =>
+      case GET -> Root / "item" =>
         for {
           allItems <- DB.allItems.map(_.asJson)
           response <- Ok(allItems)
@@ -73,11 +73,18 @@ object App extends ServerApp {
           response <- Ok(item.asJson)
         } yield response
 
+      case request @ PUT -> Root / "item" / IntVar(itemId) =>
+        for {
+          item <- request.as(jsonOf[Item.Stored])
+          _ <- DB.updateItem(item)
+          response <- NoContent()
+        } yield response
+
       case request @ POST -> Root / "item" =>
         for {
           item <- request.as(jsonOf[Item])
           inserted <- DB.insertItem(item)
-          uri = Uri.unsafeFromString(s"http://127.0.0.1/api${Data.Item.getUri(inserted)}")
+          uri = Uri.unsafeFromString(Item.getAbsoluteUri(inserted))
           response <- Created(inserted.asJson).putHeaders(headers.Location(uri))
         } yield response
 

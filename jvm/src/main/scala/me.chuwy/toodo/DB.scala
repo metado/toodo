@@ -41,6 +41,11 @@ object DB {
     sql.unique.transact(xa)
   }
 
+  def updateItem(item: Item.Stored): Task[Int] = {
+    val sql: Update0 = sql"UPDATE items SET title = ${item.model.title}, done = ${item.model.done}, create_date = ${item.model.createDate} WHERE id = ${item.id}".update
+    sql.run.transact(xa)
+  }
+
   def insertItem(item: Item): Task[Item.Stored] = {
     val sql: Update0 = sql"INSERT INTO items (title, done, create_date) VALUES (${item.title}, ${item.done}, ${item.createDate})".update
     val insterted = sql.withUniqueGeneratedKeys[Item.Stored]("id", "title", "done", "create_date")
