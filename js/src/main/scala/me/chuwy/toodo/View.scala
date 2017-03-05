@@ -51,20 +51,25 @@ object View {
       }
     }
 
+    def openItem(item: Item.Stored)(e: dom.MouseEvent): Unit = {
+      Model.getOpenItem.value match {
+        case Some(i) if i == item => Model.closeItem()
+        case _ => Model.chooseItem(item)
+      }
+      Model.recalculate()   // I don't want this to be required
+    }
+
+    def getClasses(item: Item.Stored): List[String] = {
+      val active = Model.getOpenItem.value.map(o => o.id == item.id).getOrElse(false)
+      val base = if (active) List("item", "item--active") else List("item")
+      if (item.model.done) "item--done" :: base else base
+    }
+
     item match {
       case Right(item) =>
-        def openItem(e: dom.MouseEvent): Unit = {
-          Model.getOpenItem.value match {
-            case Some(i) if i == item => Model.closeItem()
-            case _ => Model.chooseItem(item)
-          }
-          Model.recalculate()   // I don't want this to be required
-        }
-
         val checkboxId = s"checkbox-${item.id}"
-        val active = Model.getOpenItem.value.map(o => o.id == item.id).getOrElse(false)
-        val className = if (active) "item item--active" else "item"
-        <div class={className} onclick={openItem(_)}>
+        val className = getClasses(item).mkString(" ")
+        <div class={className} onclick={openItem(item)(_)}>
           <span onclick={onChange}><input id={checkboxId} type="checkbox" checked={conditionalAttribute(item.model.done)}></input> </span>
           <span>{item.model.title}</span>
           <span class="item__create-date"> {formatCreateDate(item.model.createDate)} </span>
