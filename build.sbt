@@ -76,7 +76,7 @@ lazy val toodoJS = cross.js
 
 lazy val sharedSettings = Seq(
   // File changes in `/static` should never trigger new compilation
-  watchSources := watchSources.value.filterNot(_.getPath.contains("static")),
+  watchSources := watchSources.value.filterNot(path => path.getPath.contains("static") && path.getPath.contains("target")),
   scalacOptions := Seq(
     "-deprecation",
     "-encoding", "UTF-8",

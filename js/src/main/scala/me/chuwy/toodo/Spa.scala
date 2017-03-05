@@ -18,17 +18,18 @@ object Spa extends js.JSApp {
 
   implicit val context: ExecutionContext = JSExecutionContext.queue
 
+  Controller.getItems.map(Model.parseIntoItems).onComplete {
+    case Success(Right(list)) =>
+      Model.allItems := list.map(_.asRight[String])
+    case Success(Left(err)) =>
+      Model.allItems := List(err.toString.asLeft[Item.Stored])
+    case Failure(err) =>
+      Model.allItems := List(err.toString.asLeft[Item.Stored])
+  }
+
   def main(): Unit = {
     val mainElement = dom.document.getElementById("main")
     mount(mainElement, View.app)
-
-    Controller.getItems.map(Model.parseIntoItems).onComplete {
-      case Success(Right(list)) =>
-        Model.allItems := list.map(_.asRight[String])
-      case Success(Left(err)) =>
-        Model.allItems := List(err.toString.asLeft[Item.Stored])
-      case Failure(err) =>
-        Model.allItems := List(err.toString.asLeft[Item.Stored])
-    }
   }
+
 }
