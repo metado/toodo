@@ -25,34 +25,56 @@ object Model {
 
   implicit val context: ExecutionContext = JSExecutionContext.queue
 
-  private val allItems: Var[ItemList] = Var(Nil)
+  case class State(allItems: ItemList, openItem: Option[Item.Stored])
 
-  val getAllItems: Rx[ItemList] = allItems
+  private val state: Var[State] =
+    Var(State(Nil, None))
 
-  def updateItems(newItems: ItemList): Unit =
-    allItems := newItems.sortBy {
+  def recalculate(): Unit =
+    state.update(s => s)
+
+  val getState: Rx[State] = state
+
+  val getAllItems: Rx[ItemList] =
+    state.map(_.allItems)
+
+  val getOpenItem: Rx[Option[Item.Stored]] =
+    state.map(_.openItem)
+
+  def updateItems(newItems: ItemList): Unit = {
+    def f(i: Either[String, Item.Stored]) = i match {
       case Right(item) => (item.model.done, item.model.createDate.toString)
       case Left(err) => (false, "")
     }
+    state := state.value.copy(allItems = newItems.sortBy(f))
+  }
+
+  def closeItem(): Unit =
+    state := state.value.copy(openItem = None)
+
+  def chooseItem(item: Item.Stored): Unit = {
+    state := state.value.copy(openItem = Some(item))
+  }
 
   def newItem(title: String): Unit = {
     val item = Item(title)
     Controller.createItem(item).onComplete {
       case Success(req) =>
         val newItem = parse(req.responseText).flatMap(_.as[Item.Stored]).leftMap(_.toString)
-        updateItems(newItem :: allItems.value)
+        updateItems(newItem :: getAllItems.value)
       case Failure(fail) =>
         dom.console.log(fail.asInstanceOf[js.Any])
     }
   }
 
   def updateItem(newItem: Item.Stored): Unit = {
-    val newItems = Model.allItems.value.map {
+    val newItems = Model.getAllItems.value.map {
       case Right(item) if item.id == newItem.id => Right(newItem)
       case other => other
     }
     updateItems(newItems)
   }
+
 
   def parseIntoItems(xhr: dom.XMLHttpRequest): Either[String, List[Item.Stored]] = {
     parse(xhr.responseText).flatMap { json => json.as[List[Item.Stored]] }.leftMap(_.toString)

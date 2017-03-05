@@ -4,6 +4,7 @@ import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
 
 import scala.scalajs.js
+import scala.scalajs.js.annotation.JSExport
 import scala.scalajs.concurrent.JSExecutionContext
 
 import org.scalajs.dom
@@ -27,9 +28,11 @@ object Spa extends js.JSApp {
       Model.updateItems(List(err.toString.asLeft[Item.Stored]))
   }
 
+  @JSExport
+  def getState = Model.getState.value
+
   def main(): Unit = {
     val mainElement = dom.document.getElementById("main")
     mount(mainElement, View.app)
   }
-
 }

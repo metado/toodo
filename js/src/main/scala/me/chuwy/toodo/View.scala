@@ -30,8 +30,9 @@ object View {
     <div>
       <div>{ newItemNode }</div>
       <div>
-        { Model.getAllItems.map { items => items.map(View.itemNode) } }
+        { Model.getState.map(_.allItems).map { items => items.map(View.itemNode) } }
       </div>
+      { Model.getOpenItem.map { openItem => View.openItemNode(openItem) } }
     </div>
   }
 
@@ -43,7 +44,7 @@ object View {
           Controller.updateItem(newItem).onComplete {
             case Failure(err) =>
               dom.console.log(err.asInstanceOf[js.Any])
-            case Success(_) =>
+            case Success(s) =>
               Model.updateItem(newItem)
           }
         case _ => ()
@@ -52,17 +53,36 @@ object View {
 
     item match {
       case Right(item) =>
+        def openItem(e: dom.MouseEvent): Unit = {
+          Model.getOpenItem.value match {
+            case Some(i) if i == item => Model.closeItem()
+            case _ => Model.chooseItem(item)
+          }
+          Model.recalculate()   // I don't want this to be required
+        }
+
         val checkboxId = s"checkbox-${item.id}"
-        <div class="item">
-          <label for={checkboxId}>
-            <span><input id={checkboxId} type="checkbox" checked={conditionalAttribute(item.model.done)} onchange={onChange}></input> </span>
-            <span>{item.model.title}</span>
-            <span class="item__create-date"> {formatCreateDate(item.model.createDate)} </span>
-          </label>
+        val active = Model.getOpenItem.value.map(o => o.id == item.id).getOrElse(false)
+        val className = if (active) "item item--active" else "item"
+        <div class={className} onclick={openItem(_)}>
+          <span onclick={onChange}><input id={checkboxId} type="checkbox" checked={conditionalAttribute(item.model.done)}></input> </span>
+          <span>{item.model.title}</span>
+          <span class="item__create-date"> {formatCreateDate(item.model.createDate)} </span>
         </div>
       case Left(err) =>
         <div class="item--error">{err}</div>
     }
+  }
+
+  def openItemNode(item: Option[Item.Stored]): xml.Node = item match {
+    case Some(i) =>
+      <dl class="item-info">
+        <dt>ID</dt><dd>{i.id}</dd>
+        <dt>Title</dt><dd>{i.model.title}</dd>
+        <dt>Created</dt><dd>{i.model.createDate.toString}</dd>
+        <dt>Notes</dt><dd><textarea></textarea></dd>
+      </dl>
+    case None => <div></div>
   }
 
   val newItemNode: xml.Node = {
