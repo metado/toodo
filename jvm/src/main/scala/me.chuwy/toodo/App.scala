@@ -36,7 +36,6 @@ object App extends ServerApp {
     headers.`Content-Type`(mediaType)
   }
 
-
   override def server(args: List[String]): Task[Server] = {
 
     /**

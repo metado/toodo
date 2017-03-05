@@ -30,7 +30,7 @@ object View {
     <div>
       <div>{ newItemNode }</div>
       <div>
-        { Model.allItems.map { items => items.map(View.itemNode) } }
+        { Model.getAllItems.map { items => items.map(View.itemNode) } }
       </div>
     </div>
   }

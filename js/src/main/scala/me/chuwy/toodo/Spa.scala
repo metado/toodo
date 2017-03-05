@@ -20,11 +20,11 @@ object Spa extends js.JSApp {
 
   Controller.getItems.map(Model.parseIntoItems).onComplete {
     case Success(Right(list)) =>
-      Model.allItems := list.map(_.asRight[String])
+      Model.updateItems(list.map(_.asRight[String]))
     case Success(Left(err)) =>
-      Model.allItems := List(err.toString.asLeft[Item.Stored])
+      Model.updateItems(List(err.toString.asLeft[Item.Stored]))
     case Failure(err) =>
-      Model.allItems := List(err.toString.asLeft[Item.Stored])
+      Model.updateItems(List(err.toString.asLeft[Item.Stored]))
   }
 
   def main(): Unit = {
