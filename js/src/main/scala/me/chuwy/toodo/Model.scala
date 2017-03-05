@@ -36,9 +36,9 @@ object Model {
     }
   }
 
-  def updateItem(id: Long, f: Item.Stored => Item.Stored): Unit = {
+  def updateItem(newItem: Item.Stored): Unit = {
     val newItems = Model.allItems.value.map {
-      case Right(item) if item.id == id => Right(f(item))
+      case Right(item) if item.id == newItem.id => Right(newItem)
       case other => other
     }
     Model.allItems := newItems

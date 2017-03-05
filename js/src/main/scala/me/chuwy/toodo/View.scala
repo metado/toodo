@@ -10,12 +10,19 @@ import org.scalajs.dom
 import org.scalajs.dom.ext.KeyCode
 import org.scalajs.dom.raw.HTMLInputElement
 
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
 import Data.Item
 
 /**
   * Only xml.Node, no http requests
   */
 object View {
+
+  val formatter = DateTimeFormatter.ofPattern("E dd LLL")
+  def formatCreateDate(dateTime: LocalDateTime): String =
+    formatter.format(dateTime)
 
   implicit val context: ExecutionContext = JSExecutionContext.queue
 
@@ -37,7 +44,7 @@ object View {
             case Failure(err) =>
               dom.console.log(err.asInstanceOf[js.Any])
             case Success(_) =>
-              Model.updateItem(i.id, _ => newItem)
+              Model.updateItem(newItem)
           }
         case _ => ()
       }
@@ -45,14 +52,16 @@ object View {
 
     item match {
       case Right(item) =>
-        <div>
-          <span> {item.model.title} </span>
-          <span> created at </span>
-          <span> {item.model.createDate.toString} </span>
-          <span> <input type="checkbox" checked={conditionalAttribute(item.model.done)} onchange={onChange}></input> </span>
+        val checkboxId = s"checkbox-${item.id}"
+        <div class="item">
+          <label for={checkboxId}>
+            <span><input id={checkboxId} type="checkbox" checked={conditionalAttribute(item.model.done)} onchange={onChange}></input> </span>
+            <span>{item.model.title}</span>
+            <span class="item__create-date"> {formatCreateDate(item.model.createDate)} </span>
+          </label>
         </div>
       case Left(err) =>
-        <div>{err}</div>
+        <div class="item--error">{err}</div>
     }
   }
 

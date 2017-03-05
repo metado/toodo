@@ -4,8 +4,6 @@ import java.sql.Timestamp
 
 import scala.io.Source
 
-import cats._
-
 import io.circe._, generic.auto._, io.circe.syntax._, io.circe.time._
 
 import fs2._
@@ -32,6 +30,13 @@ object App extends ServerApp {
   implicit val etime: Encoder[java.sql.Timestamp] =
     Encoder.instance((t: java.sql.Timestamp) => Json.fromString(t.getTime.toString))
 
+  def getMime(filename: String): Header = {
+    val extension = filename.split('.').last
+    val mediaType = MediaType.forExtension(extension).getOrElse(MediaType.`text/plain`)
+    headers.`Content-Type`(mediaType)
+  }
+
+
   override def server(args: List[String]): Task[Server] = {
 
     /**
@@ -48,7 +53,7 @@ object App extends ServerApp {
         Option(Thread.currentThread.getContextClassLoader.getResourceAsStream(filePath)) match {
           case Some(byteStream) =>
             val body = Source.fromInputStream(byteStream).mkString
-            val mimeType = headers.`Content-Type`(MediaType.`application/javascript`)
+            val mimeType = getMime(filePath)
             Ok().withBody(body).putHeaders(mimeType)
           case None =>
             NotFound()
@@ -75,7 +80,7 @@ object App extends ServerApp {
         for {
           item <- request.as(jsonOf[Item.Stored])
           _ <- DB.updateItem(item)
-          response <- NoContent()
+          response <- Ok(item.asJson)
         } yield response
 
       case request @ POST -> Root / "item" =>
