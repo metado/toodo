@@ -47,6 +47,7 @@ object App extends ServerApp {
         val index = Source.fromInputStream(byteStream).mkString
         val mimeType = headers.`Content-Type`(MediaType.`text/html`)
         Ok().withBody(index).putHeaders(mimeType)
+
       case GET -> path =>
         val filePath = path.toList.mkString("/")
         Option(Thread.currentThread.getContextClassLoader.getResourceAsStream(filePath)) match {

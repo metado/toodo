@@ -10,7 +10,13 @@ object Data {
 
   case class WithId[A](id: Long, model: A)
 
-  case class Item(title: String, done: Boolean, createDate: LocalDateTime)
+  case class Item(
+    title: String,
+    done: Boolean,
+    createDate: LocalDateTime,
+    note: Option[String],
+    startTime: Option[LocalDateTime],
+    endTime: Option[LocalDateTime])
 
   object Item {
 
@@ -21,6 +27,7 @@ object Data {
 
     val modelLens = lens[Stored] >> 'model
     val doneLens  = lens[Stored] >> 'model >> 'done
+    val noteLens  = lens[Stored] >> 'model >> 'note
 
     def getUri(item: Stored): String =
       s"/$path/${item.id}"
@@ -29,6 +36,6 @@ object Data {
       s"$endpoint/${item.id}"
 
     def apply(title: String): Item =
-      Item(title, false, LocalDateTime.now)
+      Item(title, false, LocalDateTime.now, None, None, None)
   }
 }

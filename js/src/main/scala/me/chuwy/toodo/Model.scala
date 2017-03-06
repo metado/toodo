@@ -35,18 +35,19 @@ object Model {
 
   val getState: Rx[State] = state
 
-  val getAllItems: Rx[ItemList] =
-    state.map(_.allItems)
+  def getAllItems: ItemList =
+    state.value.allItems
 
-  val getOpenItem: Rx[Option[Item.Stored]] =
-    state.map(_.openItem)
+  def getOpenItem: Option[Item.Stored] =
+    state.value.openItem
 
   def updateItems(newItems: ItemList): Unit = {
     def f(i: Either[String, Item.Stored]) = i match {
       case Right(item) => (item.model.done, item.model.createDate.toString)
       case Left(err) => (false, "")
     }
-    state := state.value.copy(allItems = newItems.sortBy(f))
+    val currentStatge = state.value
+    state := currentStatge.copy(allItems = newItems.sortBy(f))
   }
 
   def closeItem(): Unit =
@@ -61,20 +62,20 @@ object Model {
     Controller.createItem(item).onComplete {
       case Success(req) =>
         val newItem = parse(req.responseText).flatMap(_.as[Item.Stored]).leftMap(_.toString)
-        updateItems(newItem :: getAllItems.value)
+        val newItems = newItem :: Model.getAllItems
+        updateItems(newItems)
       case Failure(fail) =>
         dom.console.log(fail.asInstanceOf[js.Any])
     }
   }
 
   def updateItem(newItem: Item.Stored): Unit = {
-    val newItems = Model.getAllItems.value.map {
+    val newItems = Model.getAllItems.map {
       case Right(item) if item.id == newItem.id => Right(newItem)
       case other => other
     }
     updateItems(newItems)
   }
-
 
   def parseIntoItems(xhr: dom.XMLHttpRequest): Either[String, List[Item.Stored]] = {
     parse(xhr.responseText).flatMap { json => json.as[List[Item.Stored]] }.leftMap(_.toString)

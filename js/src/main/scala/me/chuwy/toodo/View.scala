@@ -8,7 +8,7 @@ import scala.scalajs.concurrent.JSExecutionContext
 
 import org.scalajs.dom
 import org.scalajs.dom.ext.KeyCode
-import org.scalajs.dom.raw.HTMLInputElement
+import org.scalajs.dom.raw.{ HTMLInputElement, HTMLTextAreaElement }
 
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -32,19 +32,19 @@ object View {
       <div>
         { Model.getState.map(_.allItems).map { items => items.map(View.itemNode) } }
       </div>
-      { Model.getOpenItem.map { openItem => View.openItemNode(openItem) } }
+      { Model.getState.map(_.openItem).map(View.itemInfoNode) }
     </div>
   }
 
   def itemNode(item: Either[String, Item.Stored]): xml.Node = {
-    val onChange: (dom.MouseEvent) => Unit = { event: dom.MouseEvent =>
+    val onChange: (dom.MouseEvent) => Unit = { _: dom.MouseEvent =>
       item match {
         case Right(i) =>
           val newItem = Data.Item.doneLens.set(i)(!i.model.done)
           Controller.updateItem(newItem).onComplete {
             case Failure(err) =>
               dom.console.log(err.asInstanceOf[js.Any])
-            case Success(s) =>
+            case Success(_) =>
               Model.updateItem(newItem)
           }
         case _ => ()
@@ -52,7 +52,7 @@ object View {
     }
 
     def openItem(item: Item.Stored)(e: dom.MouseEvent): Unit = {
-      Model.getOpenItem.value match {
+      Model.getOpenItem match {
         case Some(i) if i == item => Model.closeItem()
         case _ => Model.chooseItem(item)
       }
@@ -60,7 +60,7 @@ object View {
     }
 
     def getClasses(item: Item.Stored): List[String] = {
-      val active = Model.getOpenItem.value.map(o => o.id == item.id).getOrElse(false)
+      val active = Model.getOpenItem.map(o => o.id == item.id).getOrElse(false)
       val base = if (active) List("item", "item--active") else List("item")
       if (item.model.done) "item--done" :: base else base
     }
@@ -79,15 +79,39 @@ object View {
     }
   }
 
-  def openItemNode(item: Option[Item.Stored]): xml.Node = item match {
-    case Some(i) =>
-      <dl class="item-info">
-        <dt>ID</dt><dd>{i.id}</dd>
-        <dt>Title</dt><dd>{i.model.title}</dd>
-        <dt>Created</dt><dd>{i.model.createDate.toString}</dd>
-        <dt>Notes</dt><dd><textarea></textarea></dd>
-      </dl>
-    case None => <div></div>
+  def itemInfoNode(item: Option[Item.Stored]): xml.Node = {
+    item match {
+      case Some(i) =>
+        val onInputKeydown: (dom.KeyboardEvent) => Unit = { event: dom.KeyboardEvent =>
+          (event.currentTarget, event.keyCode) match {
+            case (input: HTMLTextAreaElement, KeyCode.Enter) =>
+              input.value.trim match {
+                case note if note.length > 1 =>
+                  val newItem = Data.Item.noteLens.set(i)(Some(note))
+                  Controller.updateItem(newItem).onComplete {
+                    case Success(_) =>
+                      Model.updateItem(newItem)
+                      Model.chooseItem(newItem)
+                    case Failure(f) => println("Failure " + f.toString)
+                  }
+                case _ => ()
+              }
+            case _ => ()
+          }
+        }
+
+        <dl class="item-info">
+          <div><span style="color: #aaaaaa">#{i.id}</span> {i.model.title}</div>
+          <div>{i.model.createDate.toString}</div>
+
+          <dt>Notes</dt>
+          <dd>
+            <textarea onkeydown={onInputKeydown}>{i.model.note.getOrElse("")}</textarea>
+            <button>Update</button>
+          </dd>
+        </dl>
+      case None => <div></div>
+    }
   }
 
   val newItemNode: xml.Node = {

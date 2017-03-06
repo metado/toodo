@@ -29,26 +29,34 @@ object DB {
     LocalDateTime.ofEpochSecond(jst.getTime / 1000, 0, ZoneOffset.UTC)
 
   implicit val localDateTimeMeta =
-    Meta[Timestamp].xmap(convertTimestamp, convertLocalDateTime)
+    Meta[Timestamp].nxmap(convertTimestamp, convertLocalDateTime)
 
   def allItems: Task[List[Item.Stored]] = {
-    val sql: Query0[Item.Stored] = sql"SELECT id, title, done, create_date FROM items".query[Item.Stored]
+    val sql: Query0[Item.Stored] = sql"SELECT id, title, done, create_date, note, start_time, end_time FROM items".query[Item.Stored]
     sql.list.transact(xa)
   }
 
   def getItem(id: Int): Task[Item.Stored] = {
-    val sql: Query0[Item.Stored] = sql"SELECT id, title, done, create_date FROM items WHERE id = $id".query[Item.Stored]
+    val sql: Query0[Item.Stored] = sql"SELECT id, title, done, create_date, note, start_time, end_time FROM items WHERE id = $id".query[Item.Stored]
     sql.unique.transact(xa)
   }
 
   def updateItem(item: Item.Stored): Task[Int] = {
-    val sql: Update0 = sql"UPDATE items SET title = ${item.model.title}, done = ${item.model.done}, create_date = ${item.model.createDate} WHERE id = ${item.id}".update
+    val sql: Update0 =
+      (fr"UPDATE items SET " ++
+        fr"title = ${item.model.title}, " ++
+        fr"done = ${item.model.done}, " ++
+        fr"create_date = ${item.model.createDate}, " ++
+        fr"note = ${item.model.note}, " ++
+        fr"start_time = ${item.model.startTime}, " ++
+        fr"end_time = ${item.model.endTime} " ++
+        fr"WHERE id = ${item.id}").update
     sql.run.transact(xa)
   }
 
   def insertItem(item: Item): Task[Item.Stored] = {
-    val sql: Update0 = sql"INSERT INTO items (title, done, create_date) VALUES (${item.title}, ${item.done}, ${item.createDate})".update
-    val insterted = sql.withUniqueGeneratedKeys[Item.Stored]("id", "title", "done", "create_date")
+    val sql: Update0 = sql"INSERT INTO items (title, done, create_date, note, start_date, end_date) VALUES (${item.title}, ${item.done}, ${item.createDate}, ${item.note}, ${item.startTime}, ${item.endTime})".update
+    val insterted = sql.withUniqueGeneratedKeys[Item.Stored]("id", "title", "done", "create_date", "note", "start_time", "end_time")
     insterted.transact(xa)
   }
 
