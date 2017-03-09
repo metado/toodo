@@ -1,16 +1,14 @@
 package me.chuwy.toodo
 
-import scala.util.{ Success, Failure }
 import scala.concurrent.ExecutionContext
 
-import scala.scalajs.js
 import scala.scalajs.concurrent.JSExecutionContext
 
 import org.scalajs.dom
 
 import cats.syntax.either._
 
-import io.circe._, time._, generic.auto._, parser._
+import io.circe._, parser._
 
 import mhtml.{ Var, Rx }
 
@@ -30,55 +28,39 @@ object Model {
   private val state: Var[State] =
     Var(State(Nil, None))
 
-  def recalculate(): Unit =
-    state.update(s => s)
-
   val getState: Rx[State] = state
 
-  def getAllItems: ItemList =
-    state.value.allItems
+  def parseXhr[A: Decoder](xhr: dom.XMLHttpRequest): Either[String, A] = {
+    parse(xhr.responseText).flatMap(_.as[A]).leftMap(_.toString)
+  }
 
-  def getOpenItem: Option[Item.Stored] =
-    state.value.openItem
+  sealed trait ModelUpdate
+  case class AddItem(item: Either[String, Item.Stored]) extends ModelUpdate
+  case class InitItems(items: ItemList) extends ModelUpdate
+  case class UpdateItems(items: ItemList) extends ModelUpdate
+  case class SelectItem(item: Item.Stored) extends ModelUpdate
+  case class UpdateItem(item: Item.Stored) extends ModelUpdate
 
-  def updateItems(newItems: ItemList): Unit = {
-    def f(i: Either[String, Item.Stored]) = i match {
-      case Right(item) => (item.model.done, item.model.createDate.toString)
-      case Left(err) => (false, "")
+  def foldState(state: State, action: ModelUpdate): State = action match {
+    case AddItem(item) => state.copy(allItems = item :: state.allItems)
+    case SelectItem(item) => state.openItem match {
+      case Some(i) if i == item => state.copy(openItem = None)
+      case _ => state.copy(openItem = Some(item))
     }
-    val currentStatge = state.value
-    state := currentStatge.copy(allItems = newItems.sortBy(f))
-  }
-
-  def closeItem(): Unit =
-    state := state.value.copy(openItem = None)
-
-  def chooseItem(item: Item.Stored): Unit = {
-    state := state.value.copy(openItem = Some(item))
-  }
-
-  def newItem(title: String): Unit = {
-    val item = Item(title)
-    Controller.createItem(item).onComplete {
-      case Success(req) =>
-        val newItem = parse(req.responseText).flatMap(_.as[Item.Stored]).leftMap(_.toString)
-        val newItems = newItem :: Model.getAllItems
-        updateItems(newItems)
-      case Failure(fail) =>
-        dom.console.log(fail.asInstanceOf[js.Any])
-    }
-  }
-
-  def updateItem(newItem: Item.Stored): Unit = {
-    val newItems = Model.getAllItems.map {
+    case InitItems(items) => state.copy(allItems = items)
+    case UpdateItem(newItem) => state.copy(allItems = state.allItems.map {
       case Right(item) if item.id == newItem.id => Right(newItem)
       case other => other
-    }
-    updateItems(newItems)
+    })
+    case UpdateItems(newItems) => state.copy(allItems = newItems.sortBy(sortItems))
   }
 
-  def parseIntoItems(xhr: dom.XMLHttpRequest): Either[String, List[Item.Stored]] = {
-    parse(xhr.responseText).flatMap { json => json.as[List[Item.Stored]] }.leftMap(_.toString)
+  def accept(action: ModelUpdate): Unit =
+    state.update(state => foldState(state, action))
+
+  def sortItems(i: Either[String, Item.Stored]) = i match {
+    case Right(item) => (item.model.done, item.model.createDate.toString)
+    case Left(err) => (false, "")
   }
 }
 

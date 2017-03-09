@@ -32,6 +32,5 @@ object Controller {
     val headers = Map("Content-Type" -> "application/json")
     Ajax.put(s"${Item.endpoint}/${item.id}", jsonPayload, headers = headers)
   }
-
 }
 

@@ -13,7 +13,10 @@ import org.scalajs.dom.raw.{ HTMLInputElement, HTMLTextAreaElement }
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
+import io.circe._, time._, generic.auto._
+
 import Data.Item
+import Model.accept
 
 /**
   * Only xml.Node, no http requests
@@ -45,22 +48,15 @@ object View {
             case Failure(err) =>
               dom.console.log(err.asInstanceOf[js.Any])
             case Success(_) =>
-              Model.updateItem(newItem)
+              accept(Model.UpdateItem(newItem))
           }
         case _ => ()
       }
     }
 
-    def openItem(item: Item.Stored)(e: dom.MouseEvent): Unit = {
-      Model.getOpenItem match {
-        case Some(i) if i == item => Model.closeItem()
-        case _ => Model.chooseItem(item)
-      }
-      Model.recalculate()   // I don't want this to be required
-    }
-
     def getClasses(item: Item.Stored): List[String] = {
-      val active = Model.getOpenItem.map(o => o.id == item.id).getOrElse(false)
+      val openItem = Model.getState.map(_.openItem).impure.value
+      val active = openItem.map(o => o.id == item.id).getOrElse(false)
       val base = if (active) List("item", "item--active") else List("item")
       if (item.model.done) "item--done" :: base else base
     }
@@ -69,7 +65,7 @@ object View {
       case Right(item) =>
         val checkboxId = s"checkbox-${item.id}"
         val className = getClasses(item).mkString(" ")
-        <div class={className} onclick={openItem(item)(_)}>
+        <div class={className} onclick={(e: dom.MouseEvent) => accept(Model.SelectItem(item))}>
           <span onclick={onChange}><input id={checkboxId} type="checkbox" checked={conditionalAttribute(item.model.done)}></input> </span>
           <span>{item.model.title}</span>
           <span class="item__create-date"> {formatCreateDate(item.model.createDate)} </span>
@@ -90,8 +86,8 @@ object View {
                   val newItem = Data.Item.noteLens.set(i)(Some(note))
                   Controller.updateItem(newItem).onComplete {
                     case Success(_) =>
-                      Model.updateItem(newItem)
-                      Model.chooseItem(newItem)
+                      accept(Model.UpdateItem(newItem))
+                      accept(Model.SelectItem(newItem))
                     case Failure(f) => println("Failure " + f.toString)
                   }
                 case _ => ()
@@ -121,7 +117,12 @@ object View {
           input.value.trim match {
             case "" =>
             case title =>
-              Model.newItem(title)
+              Controller.createItem(Item(title)).map(Model.parseXhr[Item.Stored]).onComplete {
+                case Success(item) =>
+                  accept(Model.AddItem(item))
+                case Failure(fail) =>
+                  dom.console.log(fail.asInstanceOf[js.Any])
+              }
               input.value = ""
           }
         case _ => ()

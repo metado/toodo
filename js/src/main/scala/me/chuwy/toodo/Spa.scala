@@ -11,25 +11,28 @@ import org.scalajs.dom
 
 import cats.syntax.either._
 
+import io.circe._, time._, generic.auto._
+
 import mhtml.mount
 
 import Data.Item
+import Model.accept
 
 object Spa extends js.JSApp {
 
   implicit val context: ExecutionContext = JSExecutionContext.queue
 
-  Controller.getItems.map(Model.parseIntoItems).onComplete {
+  Controller.getItems.map(Model.parseXhr[List[Item.Stored]]).onComplete {
     case Success(Right(list)) =>
-      Model.updateItems(list.map(_.asRight[String]))
+      accept(Model.UpdateItems(list.map(_.asRight[String])))
     case Success(Left(err)) =>
-      Model.updateItems(List(err.toString.asLeft[Item.Stored]))
+      accept(Model.UpdateItems(List(err.toString.asLeft[Item.Stored])))
     case Failure(err) =>
-      Model.updateItems(List(err.toString.asLeft[Item.Stored]))
+      accept(Model.UpdateItems(List(err.toString.asLeft[Item.Stored])))
   }
 
   @JSExport
-  def getState = Model.getState.value
+  def getState = Model.getState.impure.value
 
   def main(): Unit = {
     val mainElement = dom.document.getElementById("main")
